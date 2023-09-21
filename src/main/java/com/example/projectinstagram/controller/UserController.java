@@ -31,7 +31,7 @@ public class UserController {
     @PostMapping("/new")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
 
-        if (userService.getUserByUserName(user.getUserName()) != null) {
+        if (userService.getUserByUserName(user.getUsername()) != null) {
             return ResponseEntity.badRequest().body("Nom d'utilisateur déjà existant.");
         }
 

@@ -2,99 +2,82 @@ package com.example.projectinstagram.entities;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-public class User {
+@Table(name="_user")
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String userName;
+    private String email;
     private String firstName;
     private String lastName;
     private String password;
     private String photo;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Post> posts;
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Comment> comments ;
 
-    public User() {
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,  cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Post> posts=new ArrayList<>();
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments=new ArrayList<>();
+    @ManyToMany(cascade = CascadeType.PERSIST , fetch=FetchType.EAGER)
+    private List<com.example.springsecurity.entities.Role> roleList;
+
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
     }
 
-    public User(String userName, String firstName, String lastName, String password, String photo, List<Post> posts, List<Comment> comments) {
-        this.userName = userName;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.password = password;
-        this.photo = photo;
-        this.posts = posts;
-        this.comments = comments;
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
     }
 
-    public Long getId() {
-        return id;
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 
-    public String getUserName() {
-        return userName;
+
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        //boucler sur notre liste de roles ci-dessus
+        //créer une liste contenant plusieurs SimpleGrantedAuthority
+        //retourner cette liste de SimplegrantedAuthority
+        Collection<GrantedAuthority> authorities= new ArrayList<>() ;
+
+        for (com.example.springsecurity.entities.Role role: this.roleList) {
+            authorities.add(new SimpleGrantedAuthority(role.getName()));
+        }
+
+        return this.roleList.stream().map(role-> new SimpleGrantedAuthority(role.getName())).toList();
+
+
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    @Override
+    public String getUsername() {
+        return null;
     }
 
-    public String getFirstName() {
-        return firstName;
-    }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getPhoto() {
-        return photo;
-    }
-
-    public void setPhoto(String photo) {
-        this.photo = photo;
-    }
-
-    public List<Post> getPosts() {
-        return posts;
-    }
-
-    public void setPosts(List<Post> posts) {
-        this.posts = posts;
-    }
-
-    public List<Comment> getComments() {
-        return comments;
-    }
-
-    public void setComments(List<Comment> comments) {
-        this.comments = comments;
-    }
 }
